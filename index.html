@@ -50,7 +50,7 @@
         <source src="hajimi.mp3" type="audio/mpeg">
         Your browser does not not support the audio element.
     </audio>
-    <img id="music-toggle-img" src="speaker_on.png" alt="Toggle Music"/>
+    <img id="music-toggle-img" src="bgm_on.png" alt="Toggle Music"/>
 
     <h1>你是一個一個doropling!</h1>
     <p> 壓力</p>
@@ -62,8 +62,8 @@
         document.addEventListener('DOMContentLoaded', function() {
             const music = document.getElementById('background-music');
             const toggleImage = document.getElementById('music-toggle-img');
-            const speakerOnSrc = 'speaker_on.png'; // Make sure this path is correct
-            const speakerOffSrc = 'speaker_off.png'; // Make sure this path is correct
+            const speakerOnSrc = 'bgm_on.png'; // Make sure this path is correct
+            const speakerOffSrc = 'bgm_off.png'; // Make sure this path is correct
             let isPlaying = true; // Assume autoplay works initially
 
             toggleImage.addEventListener('click', function() {
