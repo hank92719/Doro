@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐍 貪食蛇 Snake</title>
+<style>
+  :root {
+    --bg:      #12121e;
+    --surface: #1c1c2e;
+    --hud:     #0c0c18;
+    --border:  #3c3c64;
+    --text:    #dcdcf0;
+    --muted:   #9090b8;
+    --accent:  #64b4ff;
+    --dead:    #ff3c3c;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', 'PingFang TC', 'Noto Sans TC', system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    padding: 16px;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 560px; }
+  .hud {
+    width: 100%;
+    background: var(--hud);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .hud-title { font-size: 20px; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+  .hud-stats { display: flex; gap: 20px; }
+  .stat { text-align: center; }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .stat-val { font-size: 18px; font-weight: 600; color: var(--text); line-height: 1.2; min-width: 36px; display: block; text-align: center; }
+  #hi-val { color: var(--accent); }
+  .canvas-wrap { position: relative; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  canvas { display: block; background: var(--bg); }
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+    background: rgba(0,0,0,0.72);
+    opacity: 0; pointer-events: none; transition: opacity .2s; border-radius: 9px;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+  .ov-title { font-size: 32px; font-weight: 700; }
+  .ov-score { font-size: 15px; color: var(--muted); }
+  .btn {
+    margin-top: 8px; padding: 9px 28px;
+    background: transparent; border: 1.5px solid var(--accent); border-radius: 8px;
+    color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer;
+    transition: background .15s, transform .1s; letter-spacing: 0.04em;
+  }
+  .btn:hover  { background: rgba(100,180,255,.12); }
+  .btn:active { transform: scale(0.96); }
+  .dpad { display: none; grid-template-columns: repeat(3, 52px); grid-template-rows: repeat(2, 52px); gap: 6px; }
+  @media (pointer: coarse), (max-width: 600px) { .dpad { display: grid; } }
+  .dpad-btn {
+    width: 52px; height: 52px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .1s, transform .1s; -webkit-tap-highlight-color: transparent;
+  }
+  .dpad-btn:active { background: var(--border); transform: scale(0.92); }
+  .dpad-up    { grid-column: 2; grid-row: 1; }
+  .dpad-left  { grid-column: 1; grid-row: 2; }
+  .dpad-down  { grid-column: 2; grid-row: 2; }
+  .dpad-right { grid-column: 3; grid-row: 2; }
+  .hint { font-size: 11px; color: var(--muted); text-align: center; line-height: 1.6; }
+  @media (pointer: coarse) { .hint .kb { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hud">
+    <span class="hud-title">🐍 SNAKE</span>
+    <div class="hud-stats">
+      <div class="stat"><span class="stat-label">分數</span><span class="stat-val" id="score-val">0</span></div>
+      <div class="stat"><span class="stat-label">最高</span><span class="stat-val" id="hi-val">0</span></div>
+      <div class="stat"><span class="stat-label">長度</span><span class="stat-val" id="len-val">3</span></div>
+    </div>
+  </div>
+  <div class="canvas-wrap" id="canvas-wrap">
+    <canvas id="c"></canvas>
+    <div class="overlay show" id="ov-start">
+      <div class="ov-title" style="color:var(--accent)">🐍 貪食蛇</div>
+      <div class="ov-score">吃越多，分越高</div>
+      <button class="btn" id="btn-start">開始遊戲</button>
+    </div>
+    <div class="overlay" id="ov-dead">
+      <div class="ov-title" style="color:var(--dead)">GAME OVER</div>
+      <div class="ov-score" id="dead-score"></div>
+      <button class="btn" id="btn-restart">再玩一次</button>
+    </div>
+  </div>
+  <div class="dpad" id="dpad">
+    <button class="dpad-btn dpad-up"    data-dir="UP">▲</button>
+    <button class="dpad-btn dpad-left"  data-dir="LEFT">◀</button>
+    <button class="dpad-btn dpad-down"  data-dir="DOWN">▼</button>
+    <button class="dpad-btn dpad-right" data-dir="RIGHT">▶</button>
+  </div>
+  <p class="hint">
+    <span class="kb">方向鍵 / WASD 移動 &nbsp;·&nbsp; R 重開 &nbsp;·&nbsp; P 暫停</span>
+    <span>觸碰方向鍵也可操作</span>
+  </p>
+</div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║              🖼️  圖片路徑設定區（請在此修改）               ║
+// ║                                                              ║
+// ║  將圖片檔案上傳到 GitHub 後，把對應路徑填入下方。            ║
+// ║  路徑範例：                                                  ║
+// ║    同資料夾   →  "images/head.png"                           ║
+// ║    子資料夾   →  "assets/snake/head.png"                     ║
+// ║                                                              ║
+// ║  建議圖片尺寸：每張 128×128 px（正方形），PNG 透明背景       ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const IMG_CONFIG = {
+
+  // 蛇頭（面向右方的原始圖，程式會自動依方向旋轉）
+  HEAD: "images/head.png",
+
+  // 蛇身（直線段，水平方向的原始圖）
+  BODY: "images/body.png",
+
+  // 轉彎節（右轉彎原始圖，程式會自動旋轉出四種轉角）
+  CORNER: "images/corner.png",
+
+  // 蛇尾（面向右方的原始圖，程式會自動依方向旋轉）
+  TAIL: "images/tail.png",
+
+  // 蘋果 / 食物
+  FOOD: "images/food.png",
+
+};
+
+// ╔══════════════════════════════════════════════════════════════╗
+// ║           ⚙️  遊戲參數設定（可選擇性修改）                  ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+const GAME_CONFIG = {
+  COLS:  25,          // 橫向格數
+  ROWS:  22,          // 縱向格數
+  CELL:  20,          // 每格像素（建議保持 20）
+  TICK:  120,         // 每步毫秒數（越小越快，建議 80~150）
+  SCORE_PER_FOOD: 10, // 每顆食物得分
+};
+
+// ════════════════════════════════════════════════════════════════
+//  以下為遊戲核心程式碼，一般情況無需修改
+// ════════════════════════════════════════════════════════════════
+
+const { COLS, ROWS, CELL, TICK, SCORE_PER_FOOD } = GAME_CONFIG;
+const W = COLS * CELL, H = ROWS * CELL;
+
+// ── Canvas 設定 ──────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const wrap   = document.getElementById('canvas-wrap');
+const dpr    = window.devicePixelRatio || 1;
+canvas.width  = W * dpr;
+canvas.height = H * dpr;
+canvas.style.width  = W + 'px';
+canvas.style.height = H + 'px';
+wrap.style.width    = W + 'px';
+wrap.style.height   = H + 'px';
+const ctx = canvas.getContext('2d');
+ctx.scale(dpr, dpr);
+ctx.imageSmoothingEnabled = true;
+ctx.imageSmoothingQuality = 'high';
+
+// ── 圖片載入 ─────────────────────────────────────────────────
+// 每張圖片預先快取為 HTMLImageElement
+const IMGS = {};
+
+function loadImage(key, src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload  = () => { IMGS[key] = img; resolve(true); };
+    img.onerror = () => {
+      // 載入失敗時用純色方塊替代，遊戲仍可正常運作
+      console.warn(`[Snake] 無法載入圖片：${src}，將使用備用色塊。`);
+      IMGS[key] = null;
+      resolve(false);
+    };
+    img.src = src;
+  });
+}
+
+async function loadAllImages() {
+  await Promise.all(
+    Object.entries(IMG_CONFIG).map(([key, src]) => loadImage(key, src))
+  );
+}
+
+// ── 旋轉繪圖輔助 ─────────────────────────────────────────────
+// angle: 0=右, 1=下, 2=左, 3=上（逆時針 90° × n → 這裡用順時針）
+function drawRotated(img, x, y, angleDeg) {
+  const cx = x + CELL / 2, cy = y + CELL / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angleDeg * Math.PI / 180);
+  ctx.drawImage(img, -CELL / 2, -CELL / 2, CELL, CELL);
+  ctx.restore();
+}
+
+// 備用色塊（圖片載入失敗時使用）
+function drawFallbackRect(x, y, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x + 2, y + 2, CELL - 4, CELL - 4, 4);
+  else ctx.rect(x + 2, y + 2, CELL - 4, CELL - 4);
+  ctx.fill();
+}
+
+// ── 方向常數 ─────────────────────────────────────────────────
+const DIR = {
+  UP:    [0, -1],
+  DOWN:  [0,  1],
+  LEFT:  [-1, 0],
+  RIGHT: [1,  0],
+};
+
+// 方向向量 → 旋轉角度（原始圖面向右方）
+function vecToAngle([dx, dy]) {
+  if (dx ===  1 && dy ===  0) return 0;    // 右
+  if (dx ===  0 && dy ===  1) return 90;   // 下
+  if (dx === -1 && dy ===  0) return 180;  // 左
+  if (dx ===  0 && dy === -1) return 270;  // 上
+  return 0;
+}
+
+// 轉彎方向 → 角度（CORNER 原始圖為「從右來、往下轉」的右下角）
+// from: 上一段的行進方向（即「從哪個方向來到這個節點」）
+// to:   下一段的行進方向
+function cornerAngle(from, to) {
+  const key = `${from[0]},${from[1]}_${to[0]},${to[1]}`;
+  const map = {
+    // 右來→下去  /  上來→左去
+    ' 1,0_0,1' : 0,   '0,-1_-1,0': 0,
+    // 下來→右去  /  左來→上去
+    '0,1_1,0'  : 90,  '-1,0_0,-1': 90,
+    // 左來→下去  /  上來→右去
+    '-1,0_0,1' : 180, '0,-1_1,0' : 180,
+    // 右來→上去  /  下來→左去
+    '1,0_0,-1' : 270, '0,1_-1,0' : 270,
+  };
+  // 修正 key 格式（含空格問題）
+  const k = `${from[0]},${from[1]}_${to[0]},${to[1]}`;
+  return map[k] ?? 0;
+}
+
+// ── 遊戲狀態 ─────────────────────────────────────────────────
+let snake, dir, nextDir, food, score, highScore, alive, paused;
+let frame = 0, lastTick = 0, animId = null;
+
+function initState() {
+  const cx = Math.floor(COLS / 2), cy = Math.floor(ROWS / 2);
+  snake   = [[cx, cy], [cx - 1, cy], [cx - 2, cy]];
+  dir     = DIR.RIGHT;
+  nextDir = DIR.RIGHT;
+  food    = spawnFood();
+  score   = 0;
+  alive   = true;
+  paused  = false;
+  frame   = 0;
+  updateHUD();
+}
+
+function spawnFood() {
+  const flat = new Set(snake.map(([x, y]) => y * COLS + x));
+  let pos;
+  do {
+    pos = [Math.floor(Math.random() * COLS), Math.floor(Math.random() * ROWS)];
+  } while (flat.has(pos[1] * COLS + pos[0]));
+  return pos;
+}
+
+function updateHUD() {
+  document.getElementById('score-val').textContent = score;
+  document.getElementById('hi-val').textContent    = highScore;
+  document.getElementById('len-val').textContent   = snake.length;
+}
+
+// ── 遊戲邏輯 ─────────────────────────────────────────────────
+function step() {
+  if (!alive || paused) return;
+  dir = nextDir;
+  const [hx, hy] = snake[0];
+  const [dx, dy] = dir;
+  const nx = hx + dx, ny = hy + dy;
+
+  if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) { die(); return; }
+  if (snake.some(([x, y]) => x === nx && y === ny))  { die(); return; }
+
+  snake.unshift([nx, ny]);
+  if (nx === food[0] && ny === food[1]) {
+    score += SCORE_PER_FOOD;
+    if (score > highScore) highScore = score;
+    food = spawnFood();
+  } else {
+    snake.pop();
+  }
+  updateHUD();
+}
+
+function die() {
+  alive = false;
+  document.getElementById('dead-score').textContent = `得分 ${score}　最高 ${highScore}`;
+  document.getElementById('ov-dead').classList.add('show');
+}
+
+// ── 繪圖 ─────────────────────────────────────────────────────
+function drawGrid() {
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth   = 0.5;
+  for (let x = 0; x <= COLS; x++) {
+    ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, H); ctx.stroke();
+  }
+  for (let y = 0; y <= ROWS; y++) {
+    ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(W, y * CELL); ctx.stroke();
+  }
+}
+
+function drawFood() {
+  const [fx, fy] = food;
+  const px = fx * CELL, py = fy * CELL;
+  if (IMGS.FOOD) {
+    // 輕微脈衝縮放
+    const pulse  = Math.abs(Math.sin(frame * 0.08));
+    const scale  = 1 + pulse * 0.08;
+    const offset = (CELL * (scale - 1)) / 2;
+    ctx.save();
+    ctx.translate(px - offset, py - offset);
+    ctx.scale(scale, scale);
+    ctx.drawImage(IMGS.FOOD, 0, 0, CELL, CELL);
+    ctx.restore();
+  } else {
+    // 備用：紅色圓形
+    const pulse = Math.abs(Math.sin(frame * 0.08));
+    const r     = CELL * 0.34 + pulse * 2.5;
+    const cx2   = px + CELL / 2, cy2 = py + CELL / 2;
+    const g     = ctx.createRadialGradient(cx2, cy2, 0, cx2, cy2, r + 8);
+    g.addColorStop(0, 'rgba(255,80,80,0.55)'); g.addColorStop(1, 'rgba(255,80,80,0)');
+    ctx.beginPath(); ctx.arc(cx2, cy2, r + 8, 0, Math.PI * 2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.beginPath(); ctx.arc(cx2, cy2, r, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff5050'; ctx.fill();
+  }
+}
+
+function drawSnake() {
+  const n = snake.length;
+  if (n === 0) return;
+
+  snake.forEach(([x, y], i) => {
+    const px = x * CELL, py = y * CELL;
+
+    if (i === 0) {
+      // ── 蛇頭 ──
+      if (IMGS.HEAD) {
+        drawRotated(IMGS.HEAD, px, py, vecToAngle(dir));
+      } else {
+        drawFallbackRect(px, py, alive ? '#50dc8c' : '#ff5050');
+      }
+
+    } else if (i === n - 1) {
+      // ── 蛇尾 ──
+      // 尾巴方向：從尾巴指向倒數第二節的方向
+      const [px2, py2] = snake[i - 1];
+      const tailDir = [px2 - x, py2 - y];   // 尾巴「朝向」前一節
+      if (IMGS.TAIL) {
+        drawRotated(IMGS.TAIL, px, py, vecToAngle(tailDir));
+      } else {
+        drawFallbackRect(px, py, alive ? '#1e7840' : '#7a1e1e');
+      }
+
+    } else {
+      // ── 蛇身 ──
+      const [px_prev, py_prev] = snake[i - 1];  // 前一節（靠近頭）
+      const [px_next, py_next] = snake[i + 1];  // 後一節（靠近尾）
+      const fromDir = [x - px_prev, y - py_prev]; // 從前一節到這節的向量
+      const toDir   = [px_next - x, py_next - y]; // 從這節到後一節的向量
+
+      const isStraight =
+        (fromDir[0] === toDir[0] && fromDir[1] === toDir[1]) ||
+        (fromDir[0] === -toDir[0] && fromDir[1] === -toDir[1]);
+
+      if (isStraight) {
+        // 直線段
+        if (IMGS.BODY) {
+          // 直線：水平或垂直
+          const angle = (fromDir[0] !== 0) ? 0 : 90;
+          drawRotated(IMGS.BODY, px, py, angle);
+        } else {
+          drawFallbackRect(px, py, alive ? '#32b464' : '#cc3333');
+        }
+      } else {
+        // 轉彎段
+        if (IMGS.CORNER) {
+          const angle = cornerAngle(fromDir, toDir);
+          drawRotated(IMGS.CORNER, px, py, angle);
+        } else {
+          drawFallbackRect(px, py, alive ? '#28a050' : '#bb2222');
+        }
+      }
+    }
+  });
+}
+
+// ── 主迴圈 ───────────────────────────────────────────────────
+function render(ts) {
+  frame++;
+  if (ts - lastTick >= TICK) { step(); lastTick = ts; }
+
+  ctx.fillStyle = '#12121e';
+  ctx.fillRect(0, 0, W, H);
+  drawGrid();
+  drawFood();
+  drawSnake();
+
+  animId = requestAnimationFrame(render);
+}
+
+// ── 輸入處理 ─────────────────────────────────────────────────
+const KEY_MAP = {
+  ArrowUp:'UP', ArrowDown:'DOWN', ArrowLeft:'LEFT', ArrowRight:'RIGHT',
+  w:'UP', s:'DOWN', a:'LEFT', d:'RIGHT',
+  W:'UP', S:'DOWN', A:'LEFT', D:'RIGHT',
+};
+
+function changeDir(name) {
+  const d = DIR[name];
+  if (!d) return;
+  const opp = [-dir[0], -dir[1]];
+  if (d[0] === opp[0] && d[1] === opp[1]) return;
+  nextDir = d;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'r' || e.key === 'R') { restart(); return; }
+  if (e.key === 'p' || e.key === 'P') { togglePause(); return; }
+  const name = KEY_MAP[e.key];
+  if (!name) return;
+  e.preventDefault();
+  changeDir(name);
+});
+
+document.querySelectorAll('.dpad-btn').forEach(btn => {
+  btn.addEventListener('click', () => changeDir(btn.dataset.dir));
+  btn.addEventListener('touchstart', e => { e.preventDefault(); changeDir(btn.dataset.dir); }, { passive: false });
+});
+
+// 觸碰滑動
+let touchStart = null;
+canvas.addEventListener('touchstart', e => {
+  touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+}, { passive: true });
+canvas.addEventListener('touchend', e => {
+  if (!touchStart) return;
+  const dx = e.changedTouches[0].clientX - touchStart.x;
+  const dy = e.changedTouches[0].clientY - touchStart.y;
+  touchStart = null;
+  if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+  if (Math.abs(dx) > Math.abs(dy)) changeDir(dx > 0 ? 'RIGHT' : 'LEFT');
+  else changeDir(dy > 0 ? 'DOWN' : 'UP');
+}, { passive: true });
+
+window.addEventListener('keydown', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+}, { passive: false });
+
+// ── 流程控制 ─────────────────────────────────────────────────
+highScore = parseInt(localStorage.getItem('snake_hi') || '0', 10);
+
+async function startGame() {
+  document.getElementById('ov-start').classList.remove('show');
+  document.getElementById('ov-dead').classList.remove('show');
+  await loadAllImages();
+  initState();
+  lastTick = performance.now();
+  if (animId) cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(render);
+}
+
+function restart() {
+  localStorage.setItem('snake_hi', highScore);
+  document.getElementById('ov-dead').classList.remove('show');
+  initState();
+  lastTick = performance.now();
+}
+
+function togglePause() {
+  if (!alive) return;
+  paused = !paused;
+  if (!paused) lastTick = performance.now();
+}
+
+document.getElementById('btn-start').addEventListener('click', startGame);
+document.getElementById('btn-restart').addEventListener('click', restart);
+
+// 初始靜態畫面
+document.getElementById('hi-val').textContent = highScore;
+ctx.fillStyle = '#12121e'; ctx.fillRect(0, 0, W, H);
+ctx.strokeStyle = '#1a1a2e'; ctx.lineWidth = 0.5;
+for (let x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x*CELL,0); ctx.lineTo(x*CELL,H); ctx.stroke(); }
+for (let y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0,y*CELL); ctx.lineTo(W,y*CELL); ctx.stroke(); }
+</script>
+</body>
+</html>
