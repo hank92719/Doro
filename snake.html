@@ -166,90 +166,8 @@
     transition: background .1s, transform .1s;
     -webkit-tap-highlight-color: transparent;
   }
-  .dpad-btn:active { background: var(--border); transform: scale(0.92); }
-  .dpad-up    { grid-column: 2; grid-row: 1; }
-  .dpad-left  { grid-column: 1; grid-row: 2; }
-  .dpad-down  { grid-column: 2; grid-row: 2; }
-  .dpad-right { grid-column: 3; grid-row: 2; }
-
-  /* ── Hint bar ── */
-  .hint {
-    font-size: 11px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.6;
-  }
-  @media (pointer: coarse) { .hint .kb { display: none; } }
-</style>
-</head>
-<body>
-
-<div class="wrap">
-
-  <!-- HUD -->
-  <div class="hud">
-    <span class="hud-title">DORO爆吃小籠包</span>
-    <div class="hud-stats">
-      <div class="stat">
-        <span class="stat-label">分數</span>
-        <span class="stat-val" id="score-val">0</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">最高</span>
-        <span class="stat-val" id="hi-val">0</span>
-      </div>
-      <div class="stat">
-        <span class="stat-label">DORO長度</span>
-        <span class="stat-val" id="len-val">3</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Canvas -->
-  <div class="canvas-wrap" id="canvas-wrap">
-    <canvas id="c"></canvas>
-
-    <!-- Start overlay -->
-    <div class="overlay show" id="ov-start">
-      <div class="ov-title" style="color:var(--accent)">貪食DORO</div>
-      <div class="ov-score">吃越多，DORO越長</div>
-      <button class="btn" id="btn-start">開始遊戲</button>
-    </div>
-
-    <!-- Dead overlay -->
-    <div class="overlay" id="ov-dead">
-      <div class="ov-title" style="color:var(--dead)">菜的一批</div>
-      <div class="ov-score" id="dead-score"></div>
-      <button class="btn" id="btn-restart">再玩一次</button>
-    </div>
-  </div>
-
-  <!-- Mobile D-pad -->
-  <div class="dpad" id="dpad">
-    <button class="dpad-btn dpad-up"    data-dir="UP">▲</button>
-    <button class="dpad-btn dpad-left"  data-dir="LEFT">◀</button>
-    <button class="dpad-btn dpad-down"  data-dir="DOWN">▼</button>
-    <button class="dpad-btn dpad-right" data-dir="RIGHT">▶</button>
-  </div>
-
-  <!-- Hint -->
-  <p class="hint">
-    <span class="kb">方向鍵 / WASD 移動 &nbsp;·&nbsp; R 重開 &nbsp;·&nbsp; P 暫停</span>
-    <span>觸碰方向鍵也可操作</span>
-  </p>
-
-</div>
-
-<script>
-// ════════════════════════════════════════════════
-//  Constants
-// ════════════════════════════════════════════════
-const CELL  = 20;
-const COLS  = 25;
-const ROWS  = 22;
-const W     = CELL * COLS;
-const H     = CELL * ROWS;
-const TICK  = 120; // ms per step (lower = faster)
+  .dpad-btn:active { background: var(--border); transform: scale(0.92); }H;
+  const TICK  = 120; // ms per step (lower = faster)
 
 // Scale canvas for retina
 const canvas = document.getElementById('c');
@@ -412,31 +330,31 @@ function drawFood() {
 }
 
 function drawSnake() {
-  const n = Math.max(snake.length - 1, 1);
+  // Get references to the images
+  const headImg = document.getElementById('snake-head-img');
+  const bodyImg = document.getElementById('snake-body-img');
+
   snake.forEach(([x,y], i) => {
-    const t   = i / n;
-    const hc  = alive ? COL_HEAD : COL_DEAD_H;
-    const tc  = alive ? COL_TAIL : COL_DEAD_T;
-    const [r,g,b] = lerpColor(hc, tc, t);
-    const pad = i === 0 ? 1 : 2;
-    const rx  = x*CELL + pad;
-    const ry  = y*CELL + pad;
-    const rw  = CELL - pad*2;
-    const rh  = CELL - pad*2;
+    const rx  = x*CELL;
+    const ry  = y*CELL;
 
-    ctx.fillStyle = `rgb(${r},${g},${b})`;
-    roundRect(ctx, rx, ry, rw, rh, 5);
-    ctx.fill();
+    let imgToDraw;
+    if (i === 0) { // Head of the snake
+      imgToDraw = headImg;
+    } else { // Body segments
+      imgToDraw = bodyImg;
+    }
 
-    // Segment inner shadow
-    if (i > 0) {
-      ctx.fillStyle = `rgba(0,0,0,0.15)`;
-      roundRect(ctx, rx+2, ry+2, rw-4, rh-4, 3);
-      ctx.fill();
+    if (imgToDraw && imgToDraw.complete) {
+      ctx.drawImage(imgToDraw, rx, ry, CELL, CELL);
+    } else {
+      // Fallback to drawing a colored square if image is not loaded or missing
+      ctx.fillStyle = i === 0 ? '#50dc8c' : '#32b464'; // Original head/body colors
+      ctx.fillRect(rx, ry, CELL, CELL);
     }
   });
 
-  // Eyes on head
+  // Eyes on head (adapted for image-based drawing)
   if (alive && snake.length > 0) {
     const [hx, hy] = snake[0];
     const [dx, dy] = dir;
@@ -597,4 +515,6 @@ window.addEventListener('keydown', e => {
 }, { passive: false });
 </script>
 </body>
+    <img id="snake-head-img" src="data:image/png;base64,{snake_head_base64}" style="display:none;"/>
+    <img id="snake-body-img" src="data:image/png;base64,{snake_body_base64}" style="display:none;"/>
 </html>
