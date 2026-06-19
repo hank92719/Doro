@@ -19,6 +19,7 @@
             background-size: cover;
             background-attachment: fixed;
             background-position: center center;
+            padding-top: 60px;
         }
         h1 {
             font-family: 'Permanent Marker', 'Chiron GoRound TC', sans-serif; 
@@ -103,23 +104,118 @@
             height: 40px;
             margin-bottom: 10px;
         }
+
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background-color: #007bff; /* 藍底，呼應您的按鈕顏色 */
+            color: white;
+            display: flex;
+            justify-content: space-between; /* 讓左、中、右平均分配空間 */
+            align-items: center; /* 垂直居中對齊 */
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000; /* 確保永遠在最上層 */
+            box-sizing: border-box; /* 防止 padding 撐開寬度 */
+        }
+        
+        /* 3. 左中右區塊的寬度配比，確保中間文字絕對居中 */
+        .topbar-left, .topbar-right {
+            width: 30%;
+            display: flex;
+            align-items: center;
+        }
+        .topbar-right {
+            justify-content: flex-end; /* 右側元件靠右對齊 */
+            position: relative; /* 讓下拉選單以這裡為基準定位 */
+        }
+        .topbar-center {
+            width: 40%;
+            text-align: center;
+            font-family: 'Josefin Sans', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        /* 4. 修改原本的音樂圖示大小（配合 Bar 的高度） */
+        #music-toggle-img {
+            cursor: pointer;
+            width: 30px; 
+            height: 30px;
+            display: block;
+        }
+        
+        /* 5. 修改選單按鈕外觀 */
+        .menu-button {
+            font-size: 22px;
+            cursor: pointer;
+            padding: 5px 10px;
+            transition: transform 0.2s;
+        }
+        .menu-button:hover {
+            transform: scale(1.1); /* 滑鼠懸停稍微放大 */
+        }
+        
+        /* 6. 修改下拉選單定位（改為相對於 topbar-right） */
+        .dropdown-content {
+            position: absolute;
+            top: 45px; /* 在 Bar 的下方彈出 */
+            right: 0;
+            width: 180px;
+            background-color: white;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+            border-radius: 5px;
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .dropdown-content a {
+            display: block;
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            font-family: 'Chiron GoRound TC', sans-serif;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            text-align: left;
+        }
+        .dropdown-content a:hover {
+            background-color: #fffcec;
+            color: #007bff;
+        }
+        .dropdown-content.show {
+            max-height: 200px;
+        }
+
         
     </style>
 </head>
 <body>
-    <audio id="background-music" loop autoplay>
-        <source src="hajimi.mp3" type="audio/mpeg">
-        Your browser does not not support the audio element.
-    </audio>
+    <div class="topbar">
+        <div class="topbar-left">
+            <audio id="background-music" loop autoplay>
+                <source src="hajimi.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <img id="music-toggle-img" src="bgm_on.png" alt="Toggle Music"/>
+        </div>
     
-    <div id="menu-btn" class="menu-button">☰</div>
-    <div id="dropdown-menu" class="dropdown-content">
-        <a href="#section1">🍊 認識 Doro 包</a>
-        <a href="#section2">👨‍🍳 製作祕聞</a>
-        <a href="#section3">🎵 哈基米音樂更換</a>
+        <div class="topbar-center">
+            doropling_eating👶
+        </div>
+    
+        <div class="topbar-right">
+            <div id="menu-btn" class="menu-button">☰</div>
+            <div id="dropdown-menu" class="dropdown-content">
+                <a href="#section1">🍊 認識 Doro 包</a>
+                <a href="#section2">👨‍🍳 成分揭露</a>
+                <a href="#section3">🎵 更改哈基米音樂</a>
+            </div>
+        </div>
     </div>
-
-    <img id="music-toggle-img" src="bgm_on.png" alt="Toggle Music"/>
 
     <h1>你是一個一個doropling!</h1>
     <p>🍊上海手工doropling等你來享用🍊</p>
