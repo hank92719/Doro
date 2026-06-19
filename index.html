@@ -54,7 +54,7 @@
         }
         .menu-button {
             position: fixed;
-            top: 20px;
+            top: 15px;
             right: 20px;
             background-color: #ffe153;
             color: white;
@@ -112,12 +112,12 @@
             background-color: #fff4c1;
             color: white;
             display: flex;
-            justify-content: space-between; /* 讓左、中、右平均分配空間 */
-            align-items: center; /* 垂直居中對齊 */
+            justify-content: space-between;
+            align-items: center;
             padding: 0 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 1000; /* 確保永遠在最上層 */
-            box-sizing: border-box; /* 防止 padding 撐開寬度 */
+            z-index: 1000;
+            box-sizing: border-box;
         }
         
         .topbar-left, .topbar-right {
@@ -140,7 +140,7 @@
             padding: 0 10px;
         }
         
-        /* 4. 修改原本的音樂圖示大小（配合 Bar 的高度） */
+        /*修改原本的音樂圖示大小 */
         #music-toggle-img {
             cursor: pointer;
             width: 40px; 
@@ -155,13 +155,13 @@
             transition: transform 0.2s;
         }
         .menu-button:hover {
-            transform: scale(1.1); /* 滑鼠懸停稍微放大 */
+            transform: scale(1.1);
         }
         
         /* 6. 修改下拉選單定位（改為相對於 topbar-right） */
         .dropdown-content {
             position: absolute;
-            top: 45px; /* 在 Bar 的下方彈出 */
+            top: 45px; /*
             right: 0;
             width: 180px;
             background-color: white;
