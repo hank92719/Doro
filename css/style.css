@@ -1,0 +1,130 @@
+            body {
+                font-family: 'Josefin Sans', sans-serif; 
+                margin: 20px;
+                background-color: #fffcec;
+                color: #333;
+                background-image: url('background.png');
+                background-size: cover;
+                background-attachment: fixed;
+                background-position: center center;
+                padding-top: 90px; 
+            }
+            h1 {
+                font-family: 'Permanent Marker', 'Chiron GoRound TC', sans-serif; 
+                color: #0056b3;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.3); 
+            }
+            p {
+                font-family: 'Chiron GoRound TC', sans-serif; 
+                line-height: 1.6;
+                font-size: 18px;
+                font-weight: 700;
+            }
+            img {
+                max-width: 200px;
+                height: auto;
+                display: block;
+                margin-top: 20px;
+            }
+            .button {
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #007bff;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+                margin-top: 20px;
+                font-size: 16px;
+                cursor: pointer;
+                transition: background-color 0.3s;
+            }
+            .button:hover {
+                background-color: #0056b3;
+            }
+            /*懸浮選單*/
+            .topbar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 70px;
+                background-color: #fff4c1; 
+                color: #333;              
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0 20px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                z-index: 1000;
+                box-sizing: border-box;
+            }
+            .topbar-left, .topbar-right {
+                flex: 1; 
+                display: flex;
+                align-items: center;
+            }  
+            .topbar-right {
+                justify-content: flex-end;
+                position: relative; 
+            }
+            .topbar-center {
+                text-align: center;
+                font-family: 'Josefin Sans', 'Chiron GoRound TC', sans-serif;
+                font-size: 20px;
+                font-weight: 750;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+                white-space: nowrap; 
+                padding: 0 10px;
+            }
+        
+            #music-toggle-img {
+                cursor: pointer;
+                width: 40px; 
+                height: 40px;
+                display: block;
+            }
+            .menu-button {
+                font-size: 20px;
+                background-color: #ffe153; 
+                color: white;             
+                padding: 10px 15px;
+                border-radius: 5px;
+                cursor: pointer;  
+                z-index: 1000; 
+                transition: background-color 0.3s, transform 0.2s;
+            }
+            .menu-button:hover {
+                background-color: #ffd306;
+                transform: scale(1.1);     
+            }
+            .dropdown-content {
+                position: absolute;
+                top: 50px; 
+                right: 0;
+                width: 180px;
+                background-color: white;
+                box-shadow: 0px 4px 10px rgba(0,0,0,0.15);
+                border-radius: 5px;
+                overflow: hidden;
+                z-index: 999;
+                max-height: 0; 
+                transition: max-height 0.3s ease-in-out;
+            }
+            .dropdown-content.show {
+                max-height: 200px;
+            }
+        
+            .dropdown-content a {
+                display: block;
+                color: #333;
+                padding: 12px 16px;
+                text-decoration: none;
+                font-family: 'Chiron GoRound TC', sans-serif;
+                border-bottom: 1px solid #eee;
+                font-size: 14px;
+                text-align: left;
+            }
+            .dropdown-content a:hover {
+                background-color: #fffcec;
+                color: #ffe153; 
+            }
