@@ -3,7 +3,7 @@ body {
     margin: 20px;
     background-color: #fffcec;
     color: #333;
-    background-image: url('../background.png'); /* 精準定位上一層的背景圖 */
+    background-image: url('../pic/background.png'); /* 精準定位上一層的背景圖 */
     background-size: cover;
     background-attachment: fixed;
     background-position: center center;
