@@ -3,7 +3,7 @@
                 margin: 20px;
                 background-color: #fffcec;
                 color: #333;
-                background-image: url('./background.png');
+                background-image: url('../background.png');
                 background-size: cover;
                 background-attachment: fixed;
                 background-position: center center;
